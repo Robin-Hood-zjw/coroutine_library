@@ -1,5 +1,5 @@
-#ifndef _COROUTINE_H_   // 防止重复包含
-#define _COROUTINE_H_   // 定义宏标识符
+#ifndef _COROUTINE_H_   // prevent multiple inclusions of the header file
+#define _COROUTINE_H_   // define the macro to indicate that the header file has been included
 
 #include <mutex>
 #include <atomic>
@@ -7,8 +7,8 @@
 #include <cassert>
 #include <iostream>
 #include <unistd.h>
-#include <functional>
 #include <ucontext.h>
+#include <functional>
 
 namespace sylar {
     /**
@@ -22,7 +22,7 @@ namespace sylar {
     class Fiber : public std::enable_shared_from_this<Fiber>{
     public:
         std::mutex _mutex;                                                                          // a mutex to protect the shared data of fiber
-        enum State { READY, RUNNING, TERM };                                                        // the states of fiber
+        enum State { READY, RUNNING, TERM };                                                        // the states of fiber (READY: the fiber is ready to run but not running yet, RUNNING: the fiber is currently running, TERM: the fiber has finished execution)
 
         Fiber(std::function<void()> cb, size_t stacksize = 0, bool run_in_scheduler = true);        // the constructor of fiber, used for creating a new fiber,
         ~Fiber();                                                                                   // the destructor of fiber (when the fiber is in TERM state)
@@ -35,25 +35,25 @@ namespace sylar {
         State getState() const;                                                                     // get the state of fiber
 
         static void SetThis(Fiber *f);                                                              // set the current running fiber, private to prevent external call
-        static std::shared_ptr<Fiber> GetThis();                                                    // get the current running fiber, private to prevent external call
         static void SetSchedulerFiber(Fiber* f);                                                    // set the scheduler fiber, private to prevent external call
+        static std::shared_ptr<Fiber> GetThis();                                                    // get the current running fiber, private to prevent external call
 
         static uint64_t GetFiberId();                                                               // get the id of current running fiber, called by resume() and yield() methods, private to prevent external call
         static void MainFunc();                                                                     // the main function of fiber, called by the system when the fiber is resumed for the first time, private to prevent external call
 
     private:
-        State m_state = READY;                                                                      // the state of fiber, default is READY
+        ucontext_t _ctx;                                                                            // the context of fiber, used for switching between fibers
+        State _state = READY;                                                                       // the state of fiber, default is READY
 
-        uint64_t m_id = 0;                                                                          // the id of fiber, assigned by the system
-        uint32_t m_stacksize = 0;                                                                   // the size of fiber's stack, default is 128KB
+        uint64_t _id = 0;                                                                           // the id of fiber, assigned by the system
+        uint32_t _stackSize = 0;                                                                    // the size of fiber's stack, default is 128KB
 
-        bool m_runInScheduler;                                                                      // whether to yield execution to the scheduler fiber when yielding, default is true
-        ucontext_t m_ctx;                                                                           // the context of fiber, used for switching between fibers
+        bool _yieldToSchedulerFiber;                                                                // a sign that indicates whether to yield execution to the scheduler fiber when yielding
 
-        void* m_stack = nullptr;                                                                    // the stack pointer of fiber, allocated by the system, used for storing the execution context of fiber
-        std::function<void()> m_cb;                                                                 // the function that the fiber will execute, defined by the user, can be reset for reuse
+        void* _stackPtr = nullptr;                                                                  // the stack pointer of fiber, allocated by the system, used for storing the execution context of fiber
+        std::function<void()> _cb;                                                                  // the function that the fiber will execute, can be reset for reuse
 
-        Fiber();                                                                                    // the constructor of fiber, used for creating the main fiber, called only by GetThis() method, private to prevent external instantiation
+        Fiber();                                                                                    // the private constructor of fiber, used for creating the main fiber, called only by GetThis() method
     };
 }
 
