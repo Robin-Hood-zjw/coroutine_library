@@ -8,32 +8,31 @@
 #include <condition_variable>
 
 namespace sylar {
-    /**
-     * @brief the Thread class is used to create and manage threads. It provides methods to get thread id, name, and join the thread. It also has static methods to get the current thread and set/get the thread name.
-     */
     class Thread {
     private:
-        pid_t _id = -1;                                                // the thread id assigned by the system
-        std::string _name;                                             // the name of the thread
-        pthread_t _thread = 0;                                         // the thread handle returned by pthread_create
+        pid_t _id = -1;                                                     // the ID of the thread
+        pthread_t _thread = 0;                                              // the thread handle
 
-        Semaphore _semaphore;                                          // semaphore to synchronize the thread creation and execution
-        std::function<void()> _cb;
+        std::string _name;                                                  // the name of the thread
 
-        static void* run(void* arg);                                   // static function to run the thread, it will call the user-defined callback function
+        Semaphore _semaphore;                                               // semaphore for thread synchronization
+        std::function<void()> _callback;                                    // the callback function to be executed by the thread
+
+        static void* run(void* arg);                                        // the static function that will be passed to pthread_create
     public:
-        Thread(std::function<void()> cb, const std::string& name);     // constructor to create a thread with a callback function and a name
-        ~Thread();                                                     // destructor to clean up the thread resources
+        Thread(std::function<void()> callback, const std::string& name);    // constructor to initialize the thread
+        ~Thread();                                                          // destructor to clean up resources
 
-        pid_t getId() const { return _id; }                            // get the thread id
-        const std::string& getName() const { return _name; }           // get the thread name
+        pid_t getId() const { return _id; }                                 // getter for the thread ID
+        const std::string& getName() const { return _name; }                // getter for the thread name
 
-        void join();                                                   // join the thread, it will block until the thread finishes execution
+        void join();                                                        // method to wait for the thread to finish                 
 
-        static pid_t GetThreadId();                                    // get the thread id assigned by the system, it will return the thread id of the current thread
-        static Thread* GetThis();                                      // get the current thread
-        static const std::string& GetName();                           // get the name of the current thread
-        static void SetName(const std::string& name);                  // set the name of the current thread
+        static pid_t GetThreadId();                                         // method to get the current thread ID
+        static Thread* GetThis();                                           // method to get the current thread object
+
+        static const std::string& GetName();                                // method to get the current thread name
+        static void SetName(const std::string& name);                       // method to set the current thread name
     };
 }
 
