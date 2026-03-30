@@ -12,12 +12,6 @@ namespace sylar {
      * @brief The static entry-point function executed by the child thread.
      * @param arg: points to the raw pointer (`this`) of the current `Thread` object
      * @return a `void*` return value of 0 indicates that the thread exited normally
-     * @details This function performs several critical tasks:
-     *   1. initializes thread-local variables with thread object, name information, ID
-     *   2. sets the thread name via platform-specific APIs, ensuring compatibility in Linux and macOS
-     *   3. swaps the callback function to minimize reference counting overhead, releasing resources after the callback completes
-     *   4. signals the semaphore to indicate that the thread has started and its ID has been set
-     *   5. executes the callback function from the user
      */
     void* Thread::run(void* arg) {
         // cast the argument to a Thread pointer
@@ -51,10 +45,6 @@ namespace sylar {
      * @param callback: The task callback function executed after the thread starts
      * @param name: A descriptive name for the thread; a length of no more than 15 bytes is recommended (due to Linux kernel limitations)
      * @throws std::logic_error if thread creation fails, with an appropriate error message logged to `std::cerr`
-     * @details The constructor performs the following steps:
-     *   1. use `pthread_create` to create the underlying POSIX thread and use `Thread::run` as the entry point
-     *   2. implement the jump from C-style API to C++ class member logic by passing the `this` pointer
-     *   3. the constructor calls `_semaphore.wait()` to enter a blocked state
      */
     Thread::Thread(std::function<void()> callback, const std::string& name): 
     _callback(callback), _name(name) {
@@ -71,10 +61,6 @@ namespace sylar {
 
     /**
      * @brief Destructor for the Thread class.
-     * @details The destructor performs the following steps:
-     *   1. clean up low-level resources associated with threads
-     *   2. invoke `pthread_detach` to reclaim the thread's memory if a Thread object is destructed while it is still active
-     *   3. set the thread handle to 0 upon the operation completion
      * @note In high-concurrency scenarios, if `Thread` objects are frequently created and destroyed, the `detach` logic here serves to defend against the exhaustion of the process's virtual memory (Virtual Address Space OOM).
      */
     Thread::~Thread() {
@@ -88,8 +74,7 @@ namespace sylar {
     /**
      * @brief The method to get the Thread's Kernel ID (LWP ID).
      * @return `pid_t`: returns the real process ID assigned by the kernel.
-     * @note
-     *   1. Due to the use of semaphore synchronization within the constructor, calling this method ensures that `_id` has been successfully written by the child thread, thereby preventing a race condition where the initial value of -1 is read.
+     * @note 1. Due to the use of semaphore synchronization within the constructor, calling this method ensures that `_id` has been successfully written by the child thread, thereby preventing a race condition where the initial value of -1 is read.
      */
     pid_t Thread::getId() const {
         return _id;
@@ -98,8 +83,7 @@ namespace sylar {
     /**
      * @brief The method to get the name stored in the thread object.
      * @return `const std::string&`: a constant reference to the thread name.
-     * @note
-     *   1. This name is specified at object creation time and remains synchronized with `cur_thread_name` in `thread_local`.
+     * @note 1. This name is specified at object creation time and remains synchronized with `cur_thread_name` in `thread_local`.
      */
     const std::string& Thread::getName() const {
         return _name;
@@ -108,14 +92,9 @@ namespace sylar {
     /**
      * @brief The method to wait for the thread to complete execution (blocking synchronization).
      * @throws std::logic_error if `pthread_join` fails, with an appropriate error message logged to `std::cerr`
-     * @details This function performs the following steps:
-     *   1. invoke `pthread_join` to block the calling thread if the thread is still running
-     *   2. pop an error if `pthread_join` fails, with an appropriate error message logged to `std::cerr`
-     *   3. reset the thread handle to 0 upon the operation completion
-     * @note 
-     *   1. You cannot join a thread from within its own thread function; doing so will result in a deadlock.
-     *   2. An error will occur if you attempt to join a thread that has already been joined or detached.
-     *   3. When developing high-performance frameworks, it is essential to ensure that, prior to object destruction, threads are either explicitly joined or automatically detached by the destructor.
+     * @note 1. You cannot join a thread from within its own thread function; doing so will result in a deadlock.
+     * @note 2. An error will occur if you attempt to join a thread that has already been joined or detached.
+     * @note 3. When developing high-performance frameworks, it is essential to ensure that, prior to object destruction, threads are either explicitly joined or automatically detached by the destructor.
      */
     void Thread::join() {
         // if the thread is still running, join it to wait for it to finish
@@ -135,14 +114,9 @@ namespace sylar {
     /**
      * @brief The method to retrieve the kernel-level unique identifier (LWP ID) of the current thread.
      * @return pid_t: The kernel thread ID of the current thread. Returns -1 if the call fails.
-     * @details This function performs several critical tasks:
-     *   1. request the ID of the current thread from the Linux kernel by executing `syscall(SYS_gettid)`
-     *   2. returns the actual Process ID (PID) recognized by the kernel scheduler
-     * @note `pthread_self()` returns a handle (memory address) maintained by the POSIX threads library, but this function returns the actual Process ID (PID) recognized by the kernel scheduler. In Linux, the kernel thread ID (LWP ID) is used for scheduling and is what you see in system monitoring tools like `top` or `htop`. This distinction is important for debugging and performance analysis, as the kernel thread ID is what the operating system uses to manage threads.\n
-     *  -scenarios:
-     *    - The thread ID observed in `top -H` or `htop` matches this return value.
-     *    - Recording this ID in a high-performance logging system enables precise tracking of which physical core or thread a task is executing on.
-     *    - In the `/proc/self/task/` directory, the folder name corresponds to this ID.
+     * @note 1. The thread ID observed in `top -H` or `htop` matches this return value.
+     * @note 2. Recording this ID in a high-performance logging system enables precise tracking of which physical core or thread a task is executing on.
+     * @note 3. In the `/proc/self/task/` directory, the folder name corresponds to this ID.
      */
     pid_t Thread::GetThreadId() {
         return syscall(SYS_gettid); // get the thread ID through a system call
@@ -151,9 +125,8 @@ namespace sylar {
     /**
      * @brief The method to get a pointer to the currently running Thread object.
      * @return `Thread*`: A pointer to the object for the current thread. If it is the main thread and has not been manually wrapped, it may return `nullptr`.
-     * @note
-     *   1. This method is conjunct with `thread_local` for optimization, offering fast access speeds.
-     *   2. The method serves as a crucial bridge connecting "physical threads" and "logical coroutines."
+     * @note 1. This method is conjunct with `thread_local` for optimization, offering fast access speeds.
+     * @note 2. The method serves as a crucial bridge connecting "physical threads" and "logical coroutines."
      */
     Thread* Thread::GetThis() {
         return cur_thread;
@@ -162,9 +135,8 @@ namespace sylar {
     /**
      * @brief The method to get the name of the current thread.
      * @return `const std::string&`: a constant reference to the current thread's name. If no name set, it returns "UNKNOWN" or the default name for the main thread.
-     * @note
-     *    1. This method is static and can be called from non-Thread member functions via `sylar::Thread::GetName()`.
-     *    2. Since a reference is returned, access is extremely fast; however, in some cases, care must be taken regarding the lifetime.
+     * @note 1. This method is static and can be called from non-Thread member functions via `sylar::Thread::GetName()`.
+     * @note 2. Since a reference is returned, access is extremely fast; however, in some cases, care must be taken regarding the lifetime.
      */
     const std::string& Thread::GetName() {
         return cur_thread_name;
@@ -173,12 +145,8 @@ namespace sylar {
     /**
      * @brief The method to set the name of the currently running thread.
      * @param name: The new thread name string
-     * @details This function performs the following steps:
-     *   1. update the current thread's name if the current thread object exists
-     *   2. update the thread-local variable `cur_thread_name` to ensure that subsequent calls to `GetName()` return the updated name
-     * @note
-     *    1. This operation modifies only the application-layer logical name. To simultaneously modify the thread name within the Linux kernel (as displayed in `ps` or `top`), you must additionally call `pthread_setname_np`.
-     *    2. In scenarios about high-frequency task switching, frequent modification of strings may incur subtle memory overhead; this requires careful trade-offs based on the specific business context.
+     * @note 1. This operation modifies only the application-layer logical name. To simultaneously modify the thread name within the Linux kernel (as displayed in `ps` or `top`), you must additionally call `pthread_setname_np`.
+     * @note 2. In scenarios about high-frequency task switching, frequent modification of strings may incur subtle memory overhead; this requires careful trade-offs based on the specific business context.
      */
     void Thread::SetName(const std::string& name) {
         if (cur_thread) cur_thread->_name = name;
