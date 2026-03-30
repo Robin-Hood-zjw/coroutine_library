@@ -86,6 +86,26 @@ namespace sylar {
     }
 
     /**
+     * @brief The method to get the Thread's Kernel ID (LWP ID).
+     * @return `pid_t`: returns the real process ID assigned by the kernel.
+     * @note
+     *   1. Due to the use of semaphore synchronization within the constructor, calling this method ensures that `_id` has been successfully written by the child thread, thereby preventing a race condition where the initial value of -1 is read.
+     */
+    pid_t Thread::getId() const {
+        return _id;
+    }
+
+    /**
+     * @brief The method to get the name stored in the thread object.
+     * @return `const std::string&`: a constant reference to the thread name.
+     * @note
+     *   1. This name is specified at object creation time and remains synchronized with `cur_thread_name` in `thread_local`.
+     */
+    const std::string& Thread::getName() const {
+        return _name;
+    }
+
+    /**
      * @brief The method to wait for the thread to complete execution (blocking synchronization).
      * @throws std::logic_error if `pthread_join` fails, with an appropriate error message logged to `std::cerr`
      * @details This function performs the following steps:
@@ -122,10 +142,10 @@ namespace sylar {
      *  -scenarios:
      *    - The thread ID observed in `top -H` or `htop` matches this return value.
      *    - Recording this ID in a high-performance logging system enables precise tracking of which physical core or thread a task is executing on.
-     *   - In the `/proc/self/task/` directory, the folder name corresponds to this ID.
+     *    - In the `/proc/self/task/` directory, the folder name corresponds to this ID.
      */
     pid_t Thread::GetThreadId() {
-        return syscall(SYS_gettid); // get the thread ID using a system call to retrieve the kernel thread ID (LWP ID)
+        return syscall(SYS_gettid); // get the thread ID through a system call
     }
 
     /**

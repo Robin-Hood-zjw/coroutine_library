@@ -7,7 +7,7 @@ namespace sylar {
     explicit Semaphore::Semaphore(int count=0) : _count(count) {}
 
     /**
-     * @brief the wait function will block the calling thread until the count is greater than zero. 
+     * @brief The method blocks the calling thread until the count is greater than zero. 
      * @details it uses a unique lock to protect the count variable and a condition variable to wait for signals. When the count is greater than zero, it will decrease the count and continue execution.
      */
     void Semaphore::wait() {
@@ -22,7 +22,7 @@ namespace sylar {
     }
 
     /**
-     * @brief the signal function will increase the count variable and wake up one waiting thread if there are any.
+     * @brief The method increases the count variable and wake up one waiting thread if there are any.
      * @details it uses a unique lock to protect the count variable and a condition variable to notify one waiting thread.
      */
     void Semaphore::signal() {
