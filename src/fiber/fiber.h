@@ -13,10 +13,6 @@
 namespace sylar {
     /**
      * @brief a coronine class that offers a coroutine's functionalities, such as creating, destroying, switching, etc.
-     * @details The Coroutine class offers functionalities for creation, destruction, and context switching, supporting the reuse and scheduling of coroutines. 
-     *  ******  each coroutine possesses a unique ID and a specific state, which can be READY, RUNNING, or TERM
-     *  ******  execution can be resumed via the `resume()` method, while control can be yielded via the `yield()` method
-     *  ******  offer static methods for retrieving the currently running coroutine and for setting the scheduler coroutine
      * @note The Coroutine class utilizes the ucontext library to implement context switching, supporting coroutine scheduling within a multi-threaded environment. The Coroutine class employs `std::enable_shared_from_this` to facilitate shared pointer functionality, thereby simplifying the management of coroutine object lifetimes.
      */
     class Fiber : public std::enable_shared_from_this<Fiber>{

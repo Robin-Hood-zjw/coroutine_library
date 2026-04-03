@@ -23,8 +23,8 @@ namespace sylar {
         Thread(std::function<void()> callback, const std::string& name);    // constructor to initialize the thread
         ~Thread();                                                          // destructor to clean up resources
 
-        pid_t getId() const { return _id; }                                 // getter for the thread ID
-        const std::string& getName() const { return _name; }                // getter for the thread name
+        pid_t getId() const;                                                // getter for the thread ID
+        const std::string& getName() const;                                 // getter for the thread name
 
         void join();                                                        // method to wait for the thread to finish                 
 
