@@ -195,7 +195,7 @@ namespace sylar {
         _main_fiber = main_fiber;
         _scheduler_fiber = main_fiber.get();
 
-        // and return a shared pointer to the running fiber
+        // return a shared pointer to the running fiber
         assert(_running_fiber == main_fiber.get());
         return _running_fiber->shared_from_this();
     }
