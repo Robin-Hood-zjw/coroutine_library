@@ -1,6 +1,7 @@
 #ifndef _SCHEDULER_H_
 #define _SCHEDULER_H_
 
+#include "../hook/hook.h"
 #include "../fiber/fiber.h"
 #include "../thread/thread.h"
 
