@@ -56,7 +56,7 @@ namespace sylar {
         };
 
         int _rootThread = -1;                                   // the ID of the root thread
-        size_t _threadCnt = 0;                                // the number of threads in the scheduler
+        size_t _threadCnt = 0;                                  // the number of threads in the scheduler
 
         bool _useCaller;                                        // a sign that indicates whether the caller thread is included in the scheduler
         bool _stopping = false;                                 // a sign that indicates whether the scheduler is stopping
@@ -69,8 +69,8 @@ namespace sylar {
         std::vector<std::shared_ptr<Thread>> _threads;          // a vector of sylar::Thread objects that represent the physical threads
 
         std::shared_ptr<Fiber> _schedulerFiber;                 // the fiber that runs the scheduler's main loop, responsible for scheduling tasks and managing worker threads
-        std::atomic<size_t> _idleThreadCnt = {0};             // the number of idle threads in the scheduler, used to determine whether to tickle worker threads when new tasks are added
-        std::atomic<size_t> _activeThreadCnt = {0};           // the number of active threads in the scheduler, used for monitoring and debugging purposes
+        std::atomic<size_t> _idleThreadCnt = {0};               // the number of idle threads in the scheduler, used to determine whether to tickle worker threads when new tasks are added
+        std::atomic<size_t> _activeThreadCnt = {0};             // the number of active threads in the scheduler, used for monitoring and debugging purposes
 
     protected:
         void SetThis();                                         // set the currently running scheduler
