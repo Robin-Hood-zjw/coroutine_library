@@ -55,28 +55,28 @@ namespace sylar {
             }
         };
 
-        std::string _name;                                      // the scheduler name
-        bool _useCaller;                                        // a sign that indicates whether the root thread is included in the scheduler
-        bool _stopping = false;                                 // a sign that indicates whether to accept new tasks
+        std::string m_name;                                      // the scheduler name
+        bool m_useCallerThread;                                  // a sign that indicates whether the main thread is included in the scheduler
+        bool m_stopping = false;                                 // a sign that indicates whether to accept new tasks
 
-        std::vector<int> _threadIds;                            // a vector of thread IDs corresponding to the physical threads
-        std::vector<std::shared_ptr<Thread>> _pool;             // a thread pool
+        std::vector<int> m_threadIds;                            // a vector of thread IDs corresponding to the physical threads
+        std::vector<std::shared_ptr<Thread>> m_pool;             // a thread pool
 
-        int _rootThread = -1;                                   // the ID of the root thread
-        std::shared_ptr<Fiber> _schedulerFiber;                 // the scheduler fiber on the root thread
+        int m_rootThreadId = -1;                                   // the ID of the root thread
+        std::shared_ptr<Fiber> m_schedulerFiber;                 // the scheduler fiber on the root thread
 
-        std::mutex _mutex;                                      // a mutex to protect the tasks
-        std::vector<ScheduleTask> _tasks;                       // a task queue (FIFO)
+        std::mutex m_mutex;                                      // a mutex to protect the tasks
+        std::vector<ScheduleTask> m_tasks;                       // a task queue (FIFO)
 
-        size_t _threadCnt = 0;                                  // the count of threads in the scheduler
-        std::atomic<size_t> _idleThreadCnt = {0};               // the number of idle threads in the thread pool
-        std::atomic<size_t> _activeThreadCnt = {0};             // the number of active threads in the thread pool
+        size_t m_threadCnt = 0;                                  // the count of threads in the scheduler
+        std::atomic<size_t> m_idleThreadCnt = {0};               // the number of idle threads in the thread pool
+        std::atomic<size_t> m_activeThreadCnt = {0};             // the number of active threads in the thread pool
 
     protected:
         /**
          * @brief Set the currently running scheduler for the current thread
          * 
-         * @note 1. access the current scheduler via Scheduler::GetThis()
+         * @note 1. access the current scheduler via Scheduler::getRunningScheduler()
          */
         void setRunningScheduler();
 
@@ -159,7 +159,7 @@ namespace sylar {
          * 
          * @return `Scheduler*`: a pointer to the current thread's scheduler, or nullptr if none exists
          */
-        static Scheduler* GetThis();
+        static Scheduler* getRunningScheduler();
 
         /**
          * @brief Schedule a new task (fiber or callback) to the scheduler
@@ -168,7 +168,7 @@ namespace sylar {
          * @param fc the task to schedule (fiber or callback function)
          * @param thread target thread ID to run this task on (-1 means any available thread)
          * 
-         * @note 1. The task is added to the FIFO task queue.
+         * @note 1. The task of a fiber or a callback is added to the FIFO task queue.
          * @note 2. If the queue was previously empty, tickle() is called to wake up idle worker threads.
          */
         template <class FiberOrCallback>
