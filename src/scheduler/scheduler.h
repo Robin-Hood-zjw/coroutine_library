@@ -159,7 +159,7 @@ namespace sylar {
          * 
          * @return `Scheduler*`: a pointer to the current thread's scheduler, or nullptr if none exists
          */
-        static Scheduler* getRunningScheduler();
+        static Scheduler* GetThis();
 
         /**
          * @brief Schedule a new task (fiber or callback) to the scheduler

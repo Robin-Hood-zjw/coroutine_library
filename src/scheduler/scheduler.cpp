@@ -123,7 +123,7 @@ namespace sylar {
     Scheduler::Scheduler(size_t threads=1, bool use_caller=true, const std::string& name="Scheduler"):
         m_useCallerThread(use_caller), m_name(name) {
             // check the number of threads should be over 0 and the caller thread should not be associated with a scheduler
-            assert(threads > 0 && Scheduler::getRunningScheduler() == nullptr);
+            assert(threads > 0 && Scheduler::GetThis() == nullptr);
 
             // set the thread-local pointer to this scheduler instance
             setRunningScheduler();
@@ -157,7 +157,7 @@ namespace sylar {
         assert(stopping() == true);
 
         // reset the thread-local pointer to the scheduler instance if it points to this instance
-        if (getRunningScheduler() == this) _scheduler = nullptr;
+        if (GetThis() == this) _scheduler = nullptr;
 
         if (debug) std::cout << "Scheduler::~Scheduler() success" << std::endl;
     }
@@ -166,7 +166,7 @@ namespace sylar {
         return m_name;
     }
 
-    Scheduler* Scheduler::getRunningScheduler() {
+    Scheduler* Scheduler::GetThis() {
         return _scheduler;
     }
 
@@ -211,9 +211,9 @@ namespace sylar {
         m_stopping = true;
 
         if (m_useCallerThread) {
-            assert(getRunningScheduler() == this);
+            assert(GetThis() == this);
         } else {
-            assert(getRunningScheduler() != this);
+            assert(GetThis() != this);
         }
 
         // wake up all worker threads to let them exit
